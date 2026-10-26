@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>جدول خفارات الأطباء المقيمين</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root{--ink:#10282b;--mut:#4b6669;--acc:#14706b;--line:rgba(255,255,255,.55);--glass:rgba(255,255,255,.38);--glass2:rgba(255,255,255,.6);--fri:rgba(255,196,64,.38);--sat:rgba(80,140,255,.30);--ok:#17794a;--warn:#c4560b;--bad:#b3261e}
+*{box-sizing:border-box}
+html{min-height:100%}
+body{margin:0;color:var(--ink);font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-serif;line-height:1.6;min-height:100vh;
+background:radial-gradient(circle at 15% 12%,#7fe3d4 0,transparent 42%),radial-gradient(circle at 88% 18%,#8fa8ff 0,transparent 40%),radial-gradient(circle at 70% 90%,#d6a2ff 0,transparent 45%),radial-gradient(circle at 10% 85%,#ffd59a 0,transparent 40%),#cfe7ee;background-attachment:fixed}
+header{margin:14px auto 0;max-width:1250px;padding:16px 24px;border-radius:16px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);box-shadow:0 8px 32px rgba(20,60,80,.18)}
+header h1{margin:0;font-size:1.3rem}
+main{max-width:1250px;margin:0 auto;padding:16px 0 30px;display:grid;gap:16px}
+@media(max-width:1280px){main,header{margin-inline:12px}}
+.card{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:18px;backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);box-shadow:0 8px 32px rgba(20,60,80,.16),inset 0 1px 0 rgba(255,255,255,.6)}
+.card h2{margin:0 0 10px;font-size:1.05rem}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+label{display:block;font-size:.85rem;color:var(--mut);margin-bottom:3px}
+input,select,button{font:inherit}
+input[type=text],input[type=number],input[type=file],select{padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--glass2);color:var(--ink);min-width:140px;backdrop-filter:blur(6px)}
+button{padding:8px 16px;border:1px solid rgba(255,255,255,.5);border-radius:10px;background:linear-gradient(135deg,rgba(20,112,107,.92),rgba(40,130,180,.88));color:#fff;cursor:pointer;font-weight:600;box-shadow:0 4px 14px rgba(20,90,110,.28);transition:transform .15s,box-shadow .15s}
+button:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(20,90,110,.34)}
+button.sec{background:var(--glass2);color:var(--acc);border:1px solid rgba(20,112,107,.45);box-shadow:none}
+button.big{padding:12px 40px;font-size:1.1rem;border-radius:14px}
+button.x{padding:0 8px;background:none;color:var(--bad);font-size:1.1rem;border:0;box-shadow:none}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #fff;outline-offset:1px;box-shadow:0 0 0 5px rgba(20,112,107,.6)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{background:var(--glass2);border:1px solid var(--line);border-radius:20px;padding:2px 12px;font-size:.9rem}
+.rule{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding:4px 0;font-size:.9rem}
+.muted{color:var(--mut);font-size:.85rem}
+.layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);gap:16px;align-items:start}
+table{border-collapse:separate;border-spacing:0;width:100%;overflow:hidden;border-radius:12px;border:1px solid var(--line)}
+th,td{border-bottom:1px solid rgba(255,255,255,.55);border-inline-start:1px solid rgba(255,255,255,.45);padding:5px 8px;text-align:center;font-size:.95rem}
+th{background:rgba(16,40,43,.78);color:#fff}
+td{background:rgba(255,255,255,.25)}
+tr.fri td{background:var(--fri)} tr.sat td{background:var(--sat)}
+td select{min-width:150px;width:100%;border:1px solid transparent;background:transparent;backdrop-filter:none}
+td select:hover{border-color:var(--line);background:var(--glass2)}
+.title{text-align:center;font-weight:700;font-size:1.1rem;margin:0 0 12px}
+.badge{display:inline-block;padding:1px 10px;border-radius:12px;color:#fff;font-size:.8rem}
+.b-ok{background:var(--ok)} .b-warn{background:var(--warn)}
+#alerts .alert{background:rgba(255,230,228,.65);backdrop-filter:blur(12px);border:1px solid rgba(179,38,30,.5);color:var(--bad);border-radius:12px;padding:8px 12px;margin-bottom:6px}
+#alerts .okmsg{background:rgba(225,247,234,.65);backdrop-filter:blur(12px);border:1px solid rgba(23,121,74,.5);color:var(--ok);border-radius:12px;padding:8px 12px}
+dialog{border:1px solid rgba(255,255,255,.7);border-radius:20px;padding:22px;width:min(440px,92vw);background:rgba(255,255,255,.55);backdrop-filter:blur(26px) saturate(170%);-webkit-backdrop-filter:blur(26px) saturate(170%);color:var(--ink);box-shadow:0 20px 60px rgba(10,40,60,.35)}
+dialog::backdrop{background:rgba(20,40,60,.35);backdrop-filter:blur(4px)}
+.dl{max-height:50vh;overflow:auto;margin:10px 0}
+.dl label{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:1rem;padding:3px 0}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+@media(max-width:900px){.grid2,.layout{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@supports not (backdrop-filter:blur(1px)){.card,header{background:rgba(255,255,255,.8)}dialog{background:#fff}}
+/* ===== 3D HERO ===== */
+header,main{position:relative;z-index:2}
+#gl{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
+.no-gl #gl{display:none}
+#hero{position:relative;z-index:2;max-width:1250px;margin:0 auto;min-height:calc(100svh - 84px);display:grid;align-items:center;padding:0 4px;touch-action:pan-y;overflow:visible}
+.hero-copy{width:min(520px,100%);justify-self:start;padding:30px 30px 28px;border-radius:26px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(20px) saturate(170%);-webkit-backdrop-filter:blur(20px) saturate(170%);box-shadow:0 14px 50px rgba(20,60,90,.22),inset 0 1px 0 rgba(255,255,255,.7)}
+.kick{margin:0 0 6px;color:var(--acc);font-weight:700}
+.hero-copy h2{margin:0 0 10px;font-size:clamp(1.8rem,4.4vw,2.9rem);line-height:1.25}
+.sub{margin:0 0 20px;color:var(--mut);max-width:44ch}
+.cta{display:inline-block;padding:12px 30px;border-radius:14px;color:#fff;font-weight:700;text-decoration:none;background:linear-gradient(135deg,#14706b,#2f7fd0 60%,#7a5cf0);box-shadow:0 8px 24px rgba(40,90,170,.35);transition:box-shadow .25s,filter .25s}
+.cta:hover{box-shadow:0 14px 34px rgba(40,90,170,.5);filter:brightness(1.08)}
+.cta:focus-visible{outline:3px solid #fff;box-shadow:0 0 0 5px rgba(20,112,107,.6)}
+.glow{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;pointer-events:none;animation:hue 14s linear infinite alternate}
+.g1{width:300px;height:300px;top:6%;left:4%;background:#5ee6d0}
+.g2{width:340px;height:340px;bottom:4%;right:8%;background:#a58bff}
+@keyframes hue{to{filter:blur(60px) hue-rotate(90deg)}}
+.credit{position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;pointer-events:none}
+.pill{position:relative;overflow:hidden;padding:7px 22px;border-radius:30px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 6px 24px rgba(20,60,90,.2);font-weight:600;letter-spacing:.02em;white-space:pre;pointer-events:auto}
+.pill::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.75) 50%,transparent 70%);transform:translateX(-130%);animation:sheen 3.8s 2s infinite}
+@keyframes sheen{to{transform:translateX(130%)}}
+.hint{position:absolute;left:0;right:0;bottom:62px;text-align:center;margin:0;font-size:.82rem;color:var(--mut);pointer-events:none}
+.sp span{display:inline-block;opacity:0;transform:translateY(.7em) rotateX(-70deg);animation:rise .85s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.rv{opacity:0;translate:0 26px}
+.rv.in{opacity:1;translate:0 0;transition:opacity .7s ease,translate .7s cubic-bezier(.2,.8,.2,1)}
+.tilt{transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s ease-out,box-shadow .25s}
+.tilt:hover{box-shadow:0 18px 50px rgba(20,60,90,.28),inset 0 1px 0 rgba(255,255,255,.7)}
+@media(max-width:900px){#hero{align-items:end;padding-bottom:110px}.hero-copy{padding:22px}.hint{bottom:56px}}
+@media(prefers-reduced-motion:reduce){.sp span{animation:none;opacity:1;transform:none}.glow,.pill::before{animation:none}.rv{opacity:1;translate:none}.tilt{transition:none}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+<header><h1>مولّد جدول الخفارات الشهري – الأطباء المقيمون (شعبة العيون)</h1></header>
+<canvas id="gl" aria-hidden="true"></canvas>
+<section id="hero" aria-label="مرحباً بك">
+  <i class="glow g1" data-depth="-.15"></i><i class="glow g2" data-depth=".18"></i>
+  <div class="hero-copy">
+    <p class="kick sp" data-depth=".03" data-words>مرحباً بك — Welcome</p>
+    <h2 class="sp" data-depth=".05" data-words>مولّد جدول الخفارات الشهري</h2>
+    <p class="sub" data-depth=".035">نظام ذكي لتوزيع خفارات الأطباء المقيمين في شعبة العيون بعدالة وسرعة.</p>
+    <a class="cta" href="#app" data-depth=".07">ابدأ إنشاء الجدول</a>
+  </div>
+  <p class="hint">انقر على العين أو الكرات المدارية للتفاعل</p>
+  <div class="credit"><div class="pill sp" dir="ltr" data-depth=".09" data-letters>Designed by: Dr. Zaid Saad</div></div>
+</section>
+
+<main id="app">
+  <section class="card">
+    <h2>الإعدادات الأساسية</h2>
+    <div class="row">
+      <div><label for="hosp">اسم المستشفى</label><input type="text" id="hosp" placeholder="مثال: مستشفى ابن الهيثم"></div>
+      <div><label for="file">قاعدة بيانات الأطباء (Excel: Doctor Name, Phone Number)</label><input type="file" id="file" accept=".xlsx,.xls"></div>
+      <button class="sec" id="btnDate">Select Month &amp; Year</button>
+      <button class="sec" id="btnDocs">Manage Active Doctors</button>
+    </div>
+    <p class="muted" id="status">لم يتم رفع ملف بعد. الشهر المحدد: <span id="monthLbl"></span></p>
+  </section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>أطباء الأولوية (الخفارة الإضافية +1)</h2>
+      <div class="row"><div><label for="priSel">اختر طبيباً</label><select id="priSel"></select></div><button class="sec" id="priAdd">إضافة</button></div>
+      <div class="chips" id="priChips"></div>
+      <p class="muted">تُمنح الخفارات الزائدة (باقي القسمة) لهؤلاء الأطباء أولاً.</p>
+    </div>
+    <div class="card">
+      <h2>طلبات وقيود تواريخ محددة</h2>
+      <div class="row">
+        <div><label for="rDoc">الطبيب</label><select id="rDoc"></select></div>
+        <div><label for="rFrom">من يوم</label><input type="number" id="rFrom" min="1" max="31" style="min-width:70px;width:80px"></div>
+        <div><label for="rTo">إلى يوم</label><input type="number" id="rTo" min="1" max="31" style="min-width:70px;width:80px"></div>
+        <div><label for="rBlk">أيام ممنوعة (مثال: 5,12)</label><input type="text" id="rBlk" style="min-width:110px;width:120px"></div>
+      </div>
+      <div class="actions"><button class="sec" id="rLast">آخر 10 أيام</button><button class="sec" id="rAdd">إضافة القيد</button></div>
+      <div id="rules"></div>
+    </div>
+  </section>
+
+  <div style="text-align:center"><button class="big" id="gen">إنشاء الجدول</button></div>
+  <div id="alerts"></div>
+
+  <section class="layout" id="out" hidden>
+    <div class="card">
+      <div id="schedWrap"></div>
+      <div class="actions"><button id="expDoc">تصدير Word</button><button id="expPdf">تصدير PDF</button></div>
+    </div>
+    <div class="card">
+      <h2>ملخص توازن الخفارات</h2>
+      <div id="summary"></div>
+    </div>
+  </section>
+</main>
+
+<dialog id="dlgDate">
+  <h2>اختيار الشهر والسنة</h2>
+  <div class="row"><div><label for="selM">الشهر</label><select id="selM"></select></div><div><label for="selY">السنة</label><input type="number" id="selY" min="2020" max="2100"></div></div>
+  <div class="actions"><button id="dateOk">تأكيد</button></div>
+</dialog>
+<dialog id="dlgDocs">
+  <h2>الأطباء الفعّالون</h2>
+  <div class="actions" style="margin:0"><button class="sec" id="allOn">تحديد الكل</button><button class="sec" id="allOff">إلغاء الكل</button></div>
+  <div class="dl" id="docList"></div>
+  <p class="muted">الطبيب غير المحدد لن تُسند إليه أي خفارة.</p>
+  <div class="actions"><button id="docsOk">تأكيد</button></div>
+</dialog>
+
+<script>
+const MONTHS=['كانون الثاني','شباط','آذار','نيسان','أيار','حزيران','تموز','آب','أيلول','تشرين الأول','تشرين الثاني','كانون الأول'];
+const DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const $=id=>document.getElementById(id);
+const S={docs:[],active:new Set(),month:new Date().getMonth(),year:new Date().getFullYear(),priority:[],rules:[],sched:[]};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dim=()=>new Date(S.year,S.month+1,0).getDate();
+const dow=d=>new Date(S.year,S.month,d).getDay();
+const pad=n=>String(n).padStart(2,'0');
+const phoneOf=n=>(S.docs.find(d=>d.name===n)||{}).phone||'';
+
+/* ---------- setup ---------- */
+$('selM').innerHTML=MONTHS.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+function monthLabel(){$('monthLbl').textContent=MONTHS[S.month]+' '+S.year}
+monthLabel();
+
+$('file').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      let rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+      rows=rows.filter(r=>String(r[0]).trim());
+      if(rows.length&&/name|doctor|اسم|الطبيب/i.test(String(rows[0][0])))rows.shift();
+      const seen=new Set();
+      S.docs=rows.map(r=>({name:String(r[0]).trim(),phone:String(r[1]??'').trim()})).filter(d=>!seen.has(d.name)&&seen.add(d.name));
+      S.active=new Set(S.docs.map(d=>d.name)); S.priority=[]; S.rules=[];
+      $('status').innerHTML=`تم استيراد ${S.docs.length} طبيب. الشهر المحدد: <span id="monthLbl"></span>`; monthLabel();
+      refreshSelects(); renderChips(); renderRules();
+    }catch(err){alert('تعذّر قراءة الملف. تأكد أنه Excel صالح بعمودين: اسم الطبيب ورقم الهاتف.')}
+  };
+  r.readAsArrayBuffer(f);
+});
+
+function activeNames(){return S.docs.filter(d=>S.active.has(d.name)).map(d=>d.name)}
+function refreshSelects(){
+  const opts=activeNames().map(n=>`<option>${esc(n)}</option>`).join('');
+  $('priSel').innerHTML=opts; $('rDoc').innerHTML=opts;
+}
+function renderChips(){
+  $('priChips').innerHTML=S.priority.map((n,i)=>`<span class="chip">${esc(n)} <button class="x" data-i="${i}" aria-label="حذف">×</button></span>`).join('')||'<span class="muted">لا يوجد</span>';
+  $('priChips').querySelectorAll('.x').forEach(b=>b.onclick=()=>{S.priority.splice(b.dataset.i,1);renderChips()});
+}
+function renderRules(){
+  $('rules').innerHTML=S.rules.map((r,i)=>`<div class="rule"><span>${esc(r.doc)}: ${r.from&&r.to?`من ${r.from} إلى ${r.to}`:'بدون نافذة'}${r.blk.length?` | ممنوع: ${r.blk.join('، ')}`:''}</span><button class="x" data-i="${i}">×</button></div>`).join('');
+  $('rules').querySelectorAll('.x').forEach(b=>b.onclick=()=>{S.rules.splice(b.dataset.i,1);renderRules()});
+}
+$('priAdd').onclick=()=>{const v=$('priSel').value;if(v&&!S.priority.includes(v)){S.priority.push(v);renderChips()}};
+$('rLast').onclick=()=>{$('rFrom').value=dim()-9;$('rTo').value=dim()};
+$('rAdd').onclick=()=>{
+  const doc=$('rDoc').value; if(!doc)return alert('ارفع ملف الأطباء أولاً.');
+  const from=+$('rFrom').value||0,to=+$('rTo').value||0;
+  const blk=$('rBlk').value.split(/[,،\s]+/).map(Number).filter(n=>n>=1&&n<=31);
+  if(!(from&&to)&&!blk.length)return alert('حدد نافذة أيام أو أيام ممنوعة.');
+  if(from&&to&&from>to)return alert('يوم البداية يجب أن يسبق يوم النهاية.');
+  S.rules.push({doc,from,to,blk}); renderRules();
+  $('rFrom').value=$('rTo').value=$('rBlk').value='';
+};
+
+/* modals */
+$('btnDate').onclick=()=>{$('selM').value=S.month;$('selY').value=S.year;$('dlgDate').showModal()};
+$('dateOk').onclick=()=>{S.month=+$('selM').value;S.year=+$('selY').value||S.year;monthLabel();$('dlgDate').close()};
+$('btnDocs').onclick=()=>{
+  if(!S.docs.length)return alert('ارفع ملف الأطباء أولاً.');
+  $('docList').innerHTML=S.docs.map((d,i)=>`<label><input type="checkbox" data-n="${i}" ${S.active.has(d.name)?'checked':''}> ${esc(d.name)}</label>`).join('');
+  $('dlgDocs').showModal();
+};
+$('allOn').onclick=()=>$('docList').querySelectorAll('input').forEach(c=>c.checked=true);
+$('allOff').onclick=()=>$('docList').querySelectorAll('input').forEach(c=>c.checked=false);
+$('docsOk').onclick=()=>{
+  S.active=new Set([...$('docList').querySelectorAll('input')].filter(c=>c.checked).map(c=>S.docs[c.dataset.n].name));
+  S.priority=S.priority.filter(n=>S.active.has(n)); S.rules=S.rules.filter(r=>S.active.has(r.doc));
+  refreshSelects();renderChips();renderRules();$('dlgDocs').close();
+};
+
+/* ---------- algorithm ---------- */
+function allowed(doc,day){
+  for(const r of S.rules){
+    if(r.doc!==doc)continue;
+    if(r.from&&r.to&&(day<r.from||day>r.to))return false;
+    if(r.blk.includes(day))return false;
+  }
+  return true;
+}
+function quotas(names,N){
+  const base=Math.floor(N/names.length);let rem=N%names.length;
+  const q={};names.forEach(n=>q[n]=base);
+  const pri=S.priority.filter(n=>names.includes(n));
+  const others=names.filter(n=>!pri.includes(n)).sort(()=>Math.random()-.5);
+  for(const n of [...pri,...others]){if(rem<=0)break;q[n]++;rem--}
+  return q;
+}
+function scoreSched(a,names){
+  const N=a.length-1;let s=0;
+  const c={};names.forEach(n=>c[n]={f:0,s:0});
+  for(let d=1;d<=N;d++){
+    if(!a[d])return 1e9;
+    const w=dow(d);if(w===5)c[a[d]].f++;if(w===6)c[a[d]].s++;
+    if(d>1&&a[d]===a[d-1])s+=40;
+    if(d>7&&(w===5||w===6)&&a[d]===a[d-7])s+=60;
+    if(d>1&&(w===6&&dow(d-1)===5)&&a[d]===a[d-1])s+=20;
+  }
+  const fs=names.map(n=>c[n].f),ss=names.map(n=>c[n].s);
+  s+=(Math.max(...fs)-Math.min(...fs)>1?200:(Math.max(...fs)-Math.min(...fs))*15);
+  s+=(Math.max(...ss)-Math.min(...ss)>1?200:(Math.max(...ss)-Math.min(...ss))*15);
+  return s;
+}
+function attempt(names,N){
+  const left=quotas(names,N),a=new Array(N+1).fill(null),cnt={};
+  names.forEach(n=>cnt[n]={f:0,s:0,t:0});
+  const order=[];
+  for(let d=1;d<=N;d++)order.push({d,k:names.filter(n=>allowed(n,d)).length,w:(dow(d)>=5?0:1),r:Math.random()});
+  order.sort((x,y)=>x.k-y.k||x.w-y.w||x.r-y.r);
+  for(const {d} of order){
+    const w=dow(d);
+    let cands=names.filter(n=>allowed(n,d)&&left[n]>0);
+    if(!cands.length)cands=names.filter(n=>allowed(n,d));
+    if(!cands.length)cands=names.slice();
+    let best=null,bs=1e9;
+    for(const n of cands){
+      let sc=Math.random()*6;
+      if(w===5)sc+=cnt[n].f*25; if(w===6)sc+=cnt[n].s*25;
+      if(a[d-1]===n)sc+=60; if(a[d+1]===n)sc+=60;
+      if((w===5||w===6)&&(a[d-7]===n||a[d+7]===n))sc+=80;
+      sc-=left[n]*3;
+      if(sc<bs){bs=sc;best=n}
+    }
+    a[d]=best;left[best]--;
+    if(w===5)cnt[best].f++;if(w===6)cnt[best].s++;
+  }
+  return a;
+}
+$('gen').onclick=()=>{
+  const names=activeNames();
+  if(!S.docs.length)return alert('ارفع ملف الأطباء أولاً.');
+  if(!names.length)return alert('لا يوجد أطباء فعّالون.');
+  const N=dim();let best=null,bs=1e9;
+  for(let i=0;i<500;i++){const a=attempt(names,N),s=scoreSched(a,names);if(s<bs){bs=s;best=a;if(s===0)break}}
+  S.sched=best;render();
+  $('out').hidden=false;$('out').scrollIntoView({behavior:'smooth'});
+};
+
+/* ---------- rendering ---------- */
+function titleText(){return `جدول خفارات الأطباء المقيمين لشعبة العيون - ${$('hosp').value.trim()||'[اسم المستشفى]'} - لشهر ${MONTHS[S.month]} ${S.year}`}
+function render(){
+  const N=dim(),names=activeNames();
+  const all=[...new Set([...names,...S.sched.filter(Boolean)])];
+  let rows='';
+  for(let d=1;d<=N;d++){
+    const w=dow(d),cls=w===5?'fri':w===6?'sat':'';
+    const opts=all.map(n=>`<option ${n===S.sched[d]?'selected':''}>${esc(n)}</option>`).join('');
+    rows+=`<tr class="${cls}"><td>${d}</td><td>${pad(d)}/${pad(S.month+1)}/${S.year}</td><td>${DAYS[w]}</td><td><select data-d="${d}">${opts}</select></td><td class="ph" id="ph${d}" dir="ltr">${esc(phoneOf(S.sched[d]))}</td></tr>`;
+  }
+  $('schedWrap').innerHTML=`<p class="title">${esc(titleText())}</p><table><thead><tr><th>التسلسل</th><th>التاريخ</th><th>اليوم</th><th>اسم الطبيب</th><th>رقم الهاتف</th></tr></thead><tbody>${rows}</tbody></table>`;
+  $('schedWrap').querySelectorAll('select').forEach(s=>s.onchange=()=>{
+    const d=+s.dataset.d;S.sched[d]=s.value;$('ph'+d).textContent=phoneOf(s.value);summarize();
+  });
+  summarize();
+}
+function stats(){
+  const names=[...new Set([...activeNames(),...S.sched.filter(Boolean)])];
+  const c={};names.forEach(n=>c[n]={t:0,f:0,s:0});
+  for(let d=1;d<S.sched.length;d++){const n=S.sched[d];if(!n)continue;c[n].t++;const w=dow(d);if(w===5)c[n].f++;if(w===6)c[n].s++}
+  return {names,c};
+}
+function summarize(){
+  const {names,c}=stats();
+  const fs=names.map(n=>c[n].f),ss=names.map(n=>c[n].s);
+  const fmin=Math.min(...fs),fmax=Math.max(...fs),smin=Math.min(...ss),smax=Math.max(...ss);
+  const issues={},msgs=[];
+  const flag=(n,m)=>{(issues[n]=issues[n]||[]).push(m);msgs.push(`${n}: ${m}`)};
+  names.forEach(n=>{
+    if(fmax-fmin>1&&(c[n].f===fmax||c[n].f===fmin))flag(n,`عدم توازن في أيام الجمعة (${c[n].f} مقابل الفرق ${fmax}–${fmin})`);
+    if(smax-smin>1&&(c[n].s===smax||c[n].s===smin))flag(n,`عدم توازن في أيام السبت (${c[n].s} مقابل الفرق ${smax}–${smin})`);
+  });
+  for(let d=8;d<S.sched.length;d++){
+    const w=dow(d);
+    if((w===5||w===6)&&S.sched[d]&&S.sched[d]===S.sched[d-7])flag(S.sched[d],`${DAYS[w]} متتالية (يوم ${d-7} ويوم ${d})`);
+  }
+  $('summary').innerHTML=`<table><thead><tr><th>الطبيب</th><th>الكل</th><th>الجمعة</th><th>السبت</th><th>الحالة</th></tr></thead><tbody>${names.map(n=>`<tr><td>${esc(n)}</td><td>${c[n].t}</td><td>${c[n].f}</td><td>${c[n].s}</td><td><span class="badge ${issues[n]?'b-warn':'b-ok'}">${issues[n]?'تنبيه':'متوازن'}</span></td></tr>`).join('')}</tbody></table>`;
+  $('alerts').innerHTML=msgs.length?msgs.map(m=>`<div class="alert" role="alert">⚠ ${esc(m)}</div>`).join(''):'<div class="okmsg">توزيع الجمع والسبوت متوازن، ولا توجد خفارات متتالية في نفس اليوم من الأسبوع.</div>';
+}
+
+/* ---------- export ---------- */
+function cleanTable(){
+  let r='';
+  for(let d=1;d<=dim();d++){
+    const w=dow(d),bg=w===5?'#fff1cf':w===6?'#e1edff':'#fff';
+    r+=`<tr style="background:${bg}"><td>${d}</td><td>${pad(d)}/${pad(S.month+1)}/${S.year}</td><td>${DAYS[w]}</td><td>${esc(S.sched[d])}</td><td dir="ltr">${esc(phoneOf(S.sched[d]))}</td></tr>`;
+  }
+  const cell='border:1px solid #444;padding:4px 6px;text-align:center;font-size:12px';
+  return `<h2 style="text-align:center;font-size:16px;margin:0 0 10px">${esc(titleText())}</h2>
+  <table dir="rtl" style="border-collapse:collapse;width:100%"><style>td,th{${cell}}</style>
+  <thead><tr style="background:#17302f;color:#fff"><th>التسلسل</th><th>التاريخ</th><th>اليوم</th><th>اسم الطبيب</th><th>رقم الهاتف</th></tr></thead><tbody>${r}</tbody></table>`;
+}
+function need(){if(!S.sched.length){alert('أنشئ الجدول أولاً.');return false}return true}
+function fname(){return `Shifts_${S.year}-${pad(S.month+1)}`}
+$('expDoc').onclick=()=>{
+  if(!need())return;
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${esc(titleText())}</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:BidiVisual/></w:WordDocument></xml><![endif]-->
+<style>@page{size:A4;margin:1.5cm}body{font-family:'Cairo','Arial',sans-serif;direction:rtl}</style></head><body dir="rtl">${cleanTable()}</body></html>`;
+  const blob=new Blob(['\ufeff',html],{type:'application/msword'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname()+'.doc';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
+$('expPdf').onclick=async()=>{
+  if(!need())return;
+  const el=document.createElement('div');
+  el.dir='rtl';el.style.cssText='position:fixed;top:0;left:0;width:720px;background:#fff;color:#000;padding:10px;z-index:-1;font-family:Cairo,Arial,sans-serif';
+  el.innerHTML=cleanTable();document.body.appendChild(el);
+  try{
+    if(document.fonts)await document.fonts.ready;
+    await html2pdf().set({margin:10,filename:fname()+'.pdf',image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save();
+  }catch(e){alert('تعذّر إنشاء PDF.')}
+  el.remove();
+};
+</script>
+<script>
+(()=>{
+'use strict';
+const hero=document.getElementById('hero'),cv=document.getElementById('gl');
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),lerp=(a,b,t)=>a+(b-a)*t;
+const ac=new AbortController(),sig={signal:ac.signal};
+class Sp{constructor(v=0,k=90,c=11){this.x=v;this.v=0;this.t=v;this.k=k;this.c=c}
+ step(dt){if(reduce){this.x=this.t;return this.x}this.v+=((this.t-this.x)*this.k-this.v*this.c)*dt;this.x+=this.v*dt;return this.x}}
+
+/* welcome text: words for Arabic (keeps letter joining), letters for English */
+function split(sel,fn){document.querySelectorAll(sel).forEach(el=>{
+ const parts=fn(el.textContent.trim());el.textContent='';
+ parts.forEach((p,i)=>{const s=document.createElement('span');s.textContent=p.replace(/ /g,'\u00a0');s.style.animationDelay=(.4+i*(sel==='[data-words]'?.13:.05))+'s';el.appendChild(s);if(sel==='[data-words]')el.appendChild(document.createTextNode(' '))});
+ el.setAttribute('aria-label',el.dataset.l||'');})}
+document.querySelectorAll('[data-words],[data-letters]').forEach(e=>e.dataset.l=e.textContent.trim());
+split('[data-words]',t=>t.split(/\s+/));split('[data-letters]',t=>[...t]);
+
+/* pointer + parallax state */
+const P={x:0,y:0,sx:0,sy:0,cx:innerWidth/2,cy:innerHeight/2};
+const layers=[...hero.querySelectorAll('[data-depth]')].map(el=>({el,d:parseFloat(el.dataset.depth)}));
+const copy=hero.querySelector('.hero-copy'),pill=hero.querySelector('.pill');
+let raf=0,last=performance.now(),gl=null;
+const schedule=()=>{if(!raf)raf=requestAnimationFrame(frame)};
+function setP(e){P.x=e.clientX/innerWidth*2-1;P.y=e.clientY/innerHeight*2-1;P.cx=e.clientX;P.cy=e.clientY}
+addEventListener('pointermove',e=>{setP(e);schedule()},{passive:true,signal:ac.signal});
+addEventListener('pointerup',e=>{if(e.pointerType==='touch'){P.x=P.y=0;schedule()}},sig);
+addEventListener('scroll',schedule,{passive:true,signal:ac.signal});
+addEventListener('resize',()=>{gl&&gl.resize();schedule()},sig);
+hero.addEventListener('pointerdown',e=>{if(e.target.closest('a,button'))return;setP(e);gl&&gl.click(e.clientX,e.clientY);schedule()},sig);
+
+function frame(now){
+ raf=0;const dt=Math.min((now-last)/1000,.033);last=now;
+ if(document.hidden){if(!reduce)schedule();return}
+ const s=clamp(scrollY/innerHeight,0,1),k=reduce?1:1-Math.exp(-dt*7);
+ P.sx=lerp(P.sx,P.x,k);P.sy=lerp(P.sy,P.y,k);
+ if(s<1||!frame.done){
+  layers.forEach(l=>{l.el.style.transform=`translate3d(${(P.sx*l.d*60).toFixed(1)}px,${(P.sy*l.d*40).toFixed(1)}px,0)`});
+  copy.style.translate=`0 ${(-s*70).toFixed(1)}px`;copy.style.opacity=(1-s*1.1).toFixed(3);pill.style.opacity=(1-s*1.4).toFixed(3);
+ }
+ frame.done=s>=1;
+ if(gl)gl.draw(dt,reduce?0:now/1000,s);
+ if(!reduce)schedule();
+}
+
+/* ---------- 3D ---------- */
+function canvasTex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t}
+function makeEnv(R){
+ const t=canvasTex(256,128,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#bfe9ff');gr.addColorStop(.5,'#ffffff');gr.addColorStop(1,'#7a6cff');g.fillStyle=gr;g.fillRect(0,0,w,h);
+  g.fillStyle='#fff';g.fillRect(30,22,46,22);g.fillRect(150,16,56,28);g.fillStyle='#ffb3e6';g.fillRect(104,62,34,14);g.fillStyle='#7ff0dd';g.fillRect(205,60,30,16)});
+ t.mapping=THREE.EquirectangularReflectionMapping;
+ const p=new THREE.PMREMGenerator(R),e=p.fromEquirectangular(t).texture;t.dispose();p.dispose();return e}
+function irisTex(){return canvasTex(256,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);
+ [[0,'#0a1a1c'],[.12,'#7be0cf'],[.5,'#1f9a9a'],[.88,'#0f4f66'],[1,'#04121a']].forEach(a=>gr.addColorStop(a[0],a[1]));g.fillStyle=gr;g.fillRect(0,0,w,h);
+ for(let i=0;i<220;i++){const x=Math.random()*w;g.strokeStyle=Math.random()<.5?`rgba(255,255,255,${Math.random()*.2})`:`rgba(0,30,40,${Math.random()*.3})`;g.beginPath();g.moveTo(x,24+Math.random()*30);g.lineTo(x,140+Math.random()*90);g.stroke()}})}
+function spriteTex(){return canvasTex(64,64,g=>{const r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.4,'rgba(255,255,255,.5)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64)})}
+
+function initGL(){
+ if(!window.THREE)throw new Error('Three.js not loaded');
+ const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true,powerPreference:'high-performance'});
+ R.setPixelRatio(Math.min(devicePixelRatio||1,1.75));
+ R.outputEncoding=THREE.sRGBEncoding;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.15;
+ R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+ cv.addEventListener('webglcontextlost',e=>{e.preventDefault();document.body.classList.add('no-gl');gl=null},sig);
+ const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(38,1,.1,60);cam.position.set(0,0,9);
+ scene.environment=makeEnv(R);
+ scene.add(new THREE.HemisphereLight(0xdff6ff,0x9a8cff,.55));
+ const key=new THREE.DirectionalLight(0xffffff,1.5);key.position.set(3,6,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);
+ Object.assign(key.shadow.camera,{left:-6,right:6,top:6,bottom:-6,near:1,far:20});key.shadow.bias=-.0005;scene.add(key);
+ const L1=new THREE.PointLight(0x39e6cf,2.2,18),L2=new THREE.PointLight(0x9a7bff,2.2,18);scene.add(L1,L2);
+
+ const rig=new THREE.Group();scene.add(rig);
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(14,14),new THREE.ShadowMaterial({opacity:.22}));floor.rotation.x=-Math.PI/2;floor.position.y=-2.6;floor.receiveShadow=true;rig.add(floor);
+
+ /* eye */
+ const eye=new THREE.Group();rig.add(eye);
+ const sclera=new THREE.Mesh(new THREE.SphereGeometry(1.6,64,48),new THREE.MeshPhysicalMaterial({color:0xf4f6fa,roughness:.28,clearcoat:1,clearcoatRoughness:.1,envMapIntensity:1}));sclera.castShadow=true;eye.add(sclera);
+ const front=new THREE.Group();front.rotation.x=Math.PI/2;eye.add(front);
+ const irisMat=new THREE.MeshPhysicalMaterial({map:irisTex(),roughness:.35,clearcoat:1,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+ front.add(new THREE.Mesh(new THREE.SphereGeometry(1.603,64,16,0,Math.PI*2,0,.5),irisMat));
+ const pupil=new THREE.Mesh(new THREE.SphereGeometry(1.607,48,8,0,Math.PI*2,0,.2),new THREE.MeshStandardMaterial({color:0x020608,roughness:.2,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));front.add(pupil);
+ eye.add(new THREE.Mesh(new THREE.SphereGeometry(1.67,64,48),new THREE.MeshPhysicalMaterial({color:0xffffff,transparent:true,opacity:.2,roughness:0,clearcoat:1,clearcoatRoughness:0,envMapIntensity:2.6,depthWrite:false})));
+
+ /* rings + orbs */
+ const rings=[],orbs=[];
+ [[2.5,0x39e6cf,.35,.2,.5],[3.0,0x9a7bff,-.5,.6,-.4],[3.5,0xff8fd8,.25,-.7,.3]].forEach(([r,c,tx,ty,sp],i)=>{
+  const g=new THREE.Group();g.rotation.set(tx,ty,0);
+  g.add(new THREE.Mesh(new THREE.TorusGeometry(r,.014,8,160),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.8,roughness:.4})));
+  const m=new THREE.Mesh(new THREE.SphereGeometry(.17,32,24),new THREE.MeshPhysicalMaterial({color:c,metalness:.6,roughness:.15,clearcoat:1,envMapIntensity:1.6}));
+  m.position.set(r,0,0);m.castShadow=true;g.add(m);g.rotation.z=i*2;rig.add(g);
+  rings.push({g,sp});orbs.push({mesh:m,s:new Sp(1,140,13),on:false});});
+ const picks=[sclera,...orbs.map(o=>o.mesh)];
+
+ /* particles */
+ const N=reduce?250:520,pos=new Float32Array(N*3);
+ for(let i=0;i<N;i++){pos[i*3]=(Math.random()-.5)*18;pos[i*3+1]=(Math.random()-.5)*11;pos[i*3+2]=(Math.random()-.5)*8-1}
+ const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+ const pts=new THREE.Points(pg,new THREE.PointsMaterial({size:.09,map:spriteTex(),color:0xffffff,transparent:true,opacity:.85,depthWrite:false}));scene.add(pts);
+
+ const eX=new Sp(0,70,10),eY=new Sp(0,70,10),eS=new Sp(1,120,12),pup=new Sp(1,80,9),ringS=new Sp(1,60,8);
+ let base={x:0,y:0,sc:1},big=false,boost=0,tint=0,hovered=null;
+ const ray=new THREE.Raycaster(),v2=new THREE.Vector2();
+ function pick(cx,cy){v2.set(cx/innerWidth*2-1,-(cy/innerHeight)*2+1);ray.setFromCamera(v2,cam);const h=ray.intersectObjects(picks,false);return h.length?h[0].object:null}
+
+ function resize(){const w=innerWidth,h=innerHeight,a=w/h;R.setSize(w,h,false);cam.aspect=a;cam.updateProjectionMatrix();
+  base=a>1.15?{x:-2.5,y:0,sc:1}:{x:0,y:1.5,sc:clamp(a*1.05,.5,.9)}}
+ function click(cx,cy){const o=pick(cx,cy);if(!o)return;
+  if(o===sclera){big=!big;pup.t=big?1.9:1;ringS.t=1.35;boost=5;tint+=.17;irisMat.color.setHSL(tint%1,.55,.78);setTimeout(()=>{ringS.t=1},700)}
+  else{const b=orbs.find(x=>x.mesh===o);b.on=!b.on;b.mesh.material.color.setHSL(Math.random(),.7,.6)}}
+ function draw(dt,t,s){
+  if(s>=1){cv.style.opacity=0;return}
+  const idle=reduce?0:1;
+  hovered=s<.6?pick(P.cx,P.cy):null;hero.style.cursor=hovered?'pointer':'';
+  eS.t=hovered===sclera?1.07:1;eY.t=P.sx*.6;eX.t=P.sy*.4;
+  eye.rotation.set(eX.step(dt)+Math.sin(t*.7)*.03*idle,eY.step(dt)+Math.sin(t*.5)*.05*idle,0);
+  eye.scale.setScalar(eS.step(dt));eye.position.y=Math.sin(t*1.1)*.12*idle;
+  const pu=pup.step(dt);pupil.scale.set(pu,1,pu);
+  boost*=Math.exp(-dt*1.5);const rs=ringS.step(dt);
+  rings.forEach(r=>{r.g.rotation.z+=dt*(r.sp+boost)*idle;r.g.scale.setScalar(rs)});
+  orbs.forEach(o=>{o.s.t=o.on?2.3:hovered===o.mesh?1.45:1;o.mesh.scale.setScalar(o.s.step(dt))});
+  L1.position.set(Math.cos(t*.6)*5,Math.sin(t*.45)*3,3.5);L2.position.set(-Math.cos(t*.5)*5,-Math.sin(t*.4)*3,3.5);
+  L1.color.setHSL((t*.05)%1,.8,.6);L2.color.setHSL((t*.05+.5)%1,.8,.65);
+  pts.rotation.y=t*.02+P.sx*.2;pts.position.set(-P.sx*.5,P.sy*.3,0);
+  rig.scale.setScalar(base.sc*lerp(1,.75,s));rig.position.set(base.x*(1-s*.6),base.y+s*1.4,0);
+  cam.position.x=P.sx*.6;cam.position.y=-P.sy*.4;cam.lookAt(0,0,0);
+  cv.style.opacity=(1-s).toFixed(3);R.render(scene,cam);
+ }
+ function dispose(){
+  scene.traverse(o=>{if(o.geometry)o.geometry.dispose();const m=o.material;if(m)(Array.isArray(m)?m:[m]).forEach(x=>{if(x.map)x.map.dispose();x.dispose()})});
+  scene.environment&&scene.environment.dispose();R.dispose()}
+ return {draw,resize,click,dispose};
+}
+try{gl=initGL();gl.resize()}catch(err){console.warn('3D disabled:',err);document.body.classList.add('no-gl');gl=null}
+addEventListener('pagehide',()=>{cancelAnimationFrame(raf);ac.abort();gl&&gl.dispose()},{once:true});
+
+/* card tilt + scroll reveal (existing sections are untouched, only enhanced) */
+if(!reduce&&matchMedia('(hover:hover)').matches)document.querySelectorAll('.card').forEach(c=>{
+ if(c.closest('.layout'))return;c.classList.add('tilt');
+ c.addEventListener('pointermove',e=>{const r=c.getBoundingClientRect();c.style.setProperty('--ry',(((e.clientX-r.left)/r.width-.5)*6).toFixed(2)+'deg');c.style.setProperty('--rx',(-((e.clientY-r.top)/r.height-.5)*6).toFixed(2)+'deg')});
+ c.addEventListener('pointerleave',()=>{c.style.setProperty('--rx','0deg');c.style.setProperty('--ry','0deg')})});
+if(!reduce&&'IntersectionObserver'in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.08});
+ document.querySelectorAll('main>*').forEach(el=>{el.classList.add('rv');io.observe(el)})}
+schedule();
+})();
+</script>
+</body>
+</html>
